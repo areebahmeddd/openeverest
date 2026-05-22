@@ -1,5 +1,6 @@
 // everest
 // Copyright (C) 2025 Percona LLC
+// Copyright (C) 2026 The OpenEverest Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -674,7 +675,7 @@ func TestRBAC_UpdateLoadBalancerConfig(t *testing.T) {
 			}
 			_, err = h.UpdateLoadBalancerConfig(ctx, &everestv1alpha1.LoadBalancerConfig{ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-config-1",
-				Namespace: common.SystemNamespace,
+				Namespace: "test-ns",
 			}})
 			assert.ErrorIs(t, err, tc.wantErr)
 		})

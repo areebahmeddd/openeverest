@@ -1,5 +1,6 @@
 // everest
 // Copyright (C) 2025 Percona LLC
+// Copyright (C) 2026 The OpenEverest Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -126,7 +127,7 @@ func TestValidate_DeleteMonitoringInstance(t *testing.T) {
 				WithScheme(kubernetes.CreateScheme()).
 				WithObjects(tc.objs...).
 				Build()
-			k := kubernetes.NewEmpty(zap.NewNop().Sugar()).WithKubernetesClient(mockClient)
+			k := kubernetes.NewEmpty(zap.NewNop().Sugar(), "test-ns").WithKubernetesClient(mockClient)
 			k8sHandler := k8s.New(zap.NewNop().Sugar(), k, "")
 
 			valHandler := New(zap.NewNop().Sugar(), k)
