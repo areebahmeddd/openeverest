@@ -175,10 +175,12 @@ build-debug: build-server-helper	## Build Everest API server binary with debug s
 .PHONY: rc
 rc: SERVER_LD_FLAGS += -X 'github.com/openeverest/openeverest/v2/cmd/config.TelemetryURL=https://check-dev.percona.com'
 rc: build-server-helper	## Build Everest API server RC version.
+rc: build-controller-helper	## Build Everest controller RC version.
 
 .PHONY: release
 release: SERVER_LD_FLAGS += -X 'github.com/openeverest/openeverest/v2/cmd/config.TelemetryURL=https://check.percona.com'
 release: build-server-helper	## Build Everest API server release version. (Use for building release only!)
+release: build-controller-helper	## Build Everest controller release version. (Use for building release only!)
 
 # Everest CLI
 CLI_LD_FLAGS = -X 'github.com/openeverest/openeverest/v2/pkg/version.Version=$(RELEASE_VERSION)' \
