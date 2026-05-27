@@ -12,16 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-  BackupStorageCRD,
-  BackupStorageFormValues,
-} from 'shared-types/backupStorages.types';
-
-export interface CreateEditModalStorageProps {
-  open: boolean;
-  handleCloseModal: () => void;
-  handleSubmitModal: (isEdit: boolean, data: BackupStorageFormValues) => void;
-  selectedStorageLocation?: BackupStorageCRD;
-  prefillNamespace?: string;
-  isLoading?: boolean;
-}
+export { BackupConfigFields } from './backup-config-fields';

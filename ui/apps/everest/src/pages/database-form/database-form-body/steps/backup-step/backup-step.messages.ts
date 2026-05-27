@@ -1,3 +1,5 @@
+// everest
+// Copyright (C) 2023 Percona LLC
 // Copyright (C) 2026 The OpenEverest Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-  BackupStorageCRD,
-  BackupStorageFormValues,
-} from 'shared-types/backupStorages.types';
-
-export interface CreateEditModalStorageProps {
-  open: boolean;
-  handleCloseModal: () => void;
-  handleSubmitModal: (isEdit: boolean, data: BackupStorageFormValues) => void;
-  selectedStorageLocation?: BackupStorageCRD;
-  prefillNamespace?: string;
-  isLoading?: boolean;
-}
+export const Messages = {
+  backups: 'Scheduled Backups',
+  captionBackups:
+    'Create a task that regularly backs up this database according to your specified schedule.',
+};
