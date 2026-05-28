@@ -25,13 +25,14 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { useCreateDbInstance } from 'hooks/api/db-instances/useCreateDbInstance';
+import { useCreateRestoreFromBackup } from 'hooks/api/restores/useDbClusterRestore';
 import { useActiveBreakpoint } from 'hooks/utils/useActiveBreakpoint';
 import { DbWizardType } from './database-form-schema';
 import DatabaseFormCancelDialog from './database-form-cancel-dialog/index';
 import DatabaseFormBody from './database-form-body';
 import DatabaseFormSideDrawer from './database-form-side-drawer';
 import { useInstancesForNamespaces, useNamespaces } from 'hooks';
-import { WizardMode } from 'shared-types/wizard.types';
+import { FormMode } from 'components/ui-generator/ui-generator.types';
 import { ZodType } from 'zod';
 import { useDatabasePageDefaultValues } from './hooks/use-database-form-default-values';
 import { useDatabasePageMode } from './hooks/use-database-page-mode';
@@ -68,32 +69,41 @@ export const DatabasePage = () => {
   const latestDataRef = useRef<DbWizardType | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const { mutate: createInstance, isPending: isCreating } =
-    useCreateDbInstance();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { mutate: createInstance, isPending: isCreating } =
+    useCreateDbInstance();
 
   const { isDesktop } = useActiveBreakpoint();
   const mode = useDatabasePageMode();
 
   // ── Schema & topology
-  const { uiSchema, topologies, hasMultipleTopologies } = useSchema();
+  const { uiSchema, topologies, hasMultipleTopologies, resolvedProvider } =
+    useSchema();
   const defaultTopology = topologies[0] || '';
   const hasImportStep = !!location.state?.showImport;
-  const providerObject = location.state?.selectedDbProvider;
+  const providerObject = location.state?.selectedDbProvider ?? resolvedProvider;
 
   // ── Backup classes (determines if backup step is shown)
   const clusterName = useClusterName();
   const { data: backupClasses = [] } = useBackupClassesList(clusterName);
   const hasBackupStep = backupClasses.length > 0;
 
-  // ── Page-level defaults (merges schema defaults + wizard-specific ones)
-  const { defaultValues } = useDatabasePageDefaultValues(
-    mode,
-    uiSchema,
-    defaultTopology,
-    hasBackupStep
+  // ── Restore mutation (needs clusterName + namespace from navigation state)
+  const { mutate: createRestore } = useCreateRestoreFromBackup(
+    clusterName,
+    location.state?.namespace ?? ''
   );
+
+  // ── Page-level defaults (merges schema defaults + wizard-specific ones)
+  const { defaultValues, dbClusterRequestStatus } =
+    useDatabasePageDefaultValues(
+      mode,
+      uiSchema,
+      defaultTopology,
+      hasBackupStep
+    );
   const loadingClusterValues = !defaultValues;
 
   // ── Data queries ─────────────────────────────────────────────────────────
@@ -181,7 +191,7 @@ export const DatabasePage = () => {
         fields: Object.values(ImportFields) as string[],
       });
     }
-    if (hasBackupStep) {
+    if (hasBackupStep && mode !== FormMode.Restore) {
       steps.push({
         id: BACKUP_STEP_ID,
         label: 'Backups',
@@ -190,7 +200,7 @@ export const DatabasePage = () => {
       });
     }
     return steps;
-  }, [hasImportStep, hasBackupStep]);
+  }, [hasImportStep, hasBackupStep, mode]);
 
   const engine = useFormEngine({
     uiSchema,
@@ -198,6 +208,7 @@ export const DatabasePage = () => {
     staticSteps,
     providerObject,
     namespace: selectedNamespace || namespaces[0],
+    formMode: mode,
   });
 
   // Navigation
@@ -270,13 +281,17 @@ export const DatabasePage = () => {
     trigger();
   }, [nav.activeStepId, trigger]);
 
-  // Restore mode defaults
+  // Restore mode defaults — force reset when source instance data arrives.
+  // We track whether the "real" (instance-backed) defaults have been applied,
+  // and skip the isDirty guard the first time they arrive.
+  const restoreDefaultsApplied = useRef(false);
   useEffect(() => {
-    if (isDirty) return;
-    if (mode === WizardMode.Restore) {
-      reset(defaultValues);
-    }
-  }, [defaultValues, isDirty, reset, mode]);
+    if (mode !== FormMode.Restore) return;
+    if (dbClusterRequestStatus !== 'success') return;
+    if (restoreDefaultsApplied.current && isDirty) return;
+    restoreDefaultsApplied.current = true;
+    reset(defaultValues);
+  }, [defaultValues, isDirty, reset, mode, dbClusterRequestStatus]);
 
   // Route guards
   useEffect(() => {
@@ -318,7 +333,7 @@ export const DatabasePage = () => {
 
     latestDataRef.current = postProcessedData;
 
-    if (mode === WizardMode.New) {
+    if (mode === FormMode.New) {
       createInstance(
         { formValue: postProcessedData },
         {
@@ -327,11 +342,31 @@ export const DatabasePage = () => {
           },
         }
       );
+    } else if (mode === FormMode.Restore) {
+      const backupName = location.state?.backupName as string;
+      createInstance(
+        { formValue: postProcessedData },
+        {
+          onSuccess: () => {
+            const newInstanceName = postProcessedData.dbName as string;
+            createRestore(
+              { instanceName: newInstanceName, backupName },
+              {
+                onSuccess: () => {
+                  setFormSubmitted(true);
+                },
+              }
+            );
+          },
+        }
+      );
     }
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
-  if (!uiSchema) return null;
+  if (!uiSchema || (mode === FormMode.Restore && topologies.length === 0)) {
+    return null;
+  }
 
   return (
     <DatabaseFormProvider
@@ -343,7 +378,7 @@ export const DatabasePage = () => {
         sections: engine.sections,
         sectionsOrder: engine.sectionsOrder,
         providerObject,
-        hasBackupStep,
+        hasBackupStep: hasBackupStep && mode !== FormMode.Restore,
       }}
     >
       <Stack direction={isDesktop ? 'row' : 'column'}>

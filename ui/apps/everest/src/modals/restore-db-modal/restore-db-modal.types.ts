@@ -12,10 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export enum DBClusterDetailsTabs {
-  overview = 'overview',
-  backups = 'backups',
-  restores = 'restores',
-  // components = 'components',
-  // logs = 'logs',
+export interface RestoreDbModalProps {
+  isOpen: boolean;
+  closeModal: () => void;
+  instanceName: string;
+  namespace: string;
+  isNewClusterMode?: boolean;
+  preselectedBackupName?: string;
+}
+
+export interface RestorableBackupOption {
+  name: string;
+  startedAt?: string;
+}
+
+export interface ModalContentProps {
+  isLoading: boolean;
+  header: string;
+  succeededBackups: RestorableBackupOption[];
+  // TODO: Re-enable PITR props when PITR restore flow is implemented.
+  // pitrData?: DatabaseClusterPitr;
+  // backupName?: string;
 }

@@ -14,14 +14,15 @@
 
 import { MenuItem } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-// import AddIcon from '@mui/icons-material/Add';
-// import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+// import AddIcon from '@mui/icons-material/Add'; // TODO: re-enable when create-new-db is restored
 import { MRT_Row } from 'material-react-table';
 import {
   Backup,
   BackupStatus,
   getBackupState,
 } from 'shared-types/backups.types';
+// TODO: Re-enable when RBAC-based restore actions are restored.
 // import { DbCluster } from 'shared-types/dbCluster.types';
 import { Messages } from './backups-list.messages';
 
@@ -29,44 +30,58 @@ import { Messages } from './backups-list.messages';
 // Restore these when restore feature is implemented in v2.
 export const getBackupActionButtons = (
   row: MRT_Row<Backup>,
-  // TODO: v2 restore feature — uncomment when ready
-  // blockActions: boolean,
   handleDeleteBackup: (backupName: string) => void,
-  // handleRestoreBackup: (backupName: string) => void,
-  // handleRestoreToNewDbBackup: (backupName: string) => void,
-  // dbCluster: DbCluster
+  handleRestoreBackup: (backupName: string) => void,
+  // handleRestoreToNewDbBackup: (backupName: string) => void, // TODO: re-enable when create-new-db is restored
+  _handleRestoreToNewDbBackup: (backupName: string) => void,
   canDelete: boolean,
   isDeleting = false
 ) => {
   const backupName = row.original.metadata?.name ?? '';
-
-  // TODO: v2 restore — original restore RBAC checks (from main):
-  // canRestore / canCreateClusterFromBackup should be derived outside and passed in.
+  const backupState = getBackupState(row.original);
+  // TODO: Re-enable when RBAC-based restore actions are restored.
+  // const { canDelete } = useRBACPermissions(
+  //   'database-cluster-backups',
+  //   `${dbCluster.metadata.namespace}/${row.original.dbClusterName}`
+  // );
+  // const { canCreate: canCreateRestore } = useRBACPermissions(
+  //   'database-cluster-restores',
+  //   `${dbCluster.metadata.namespace}/${row.original.dbClusterName}`
+  // );
+  // const { canCreate: canCreateClusters } = useRBACPermissions(
+  //   'database-clusters',
+  //   `${dbCluster.metadata.namespace}/*`
+  // );
+  // const { canRead: canReadCredentials } = useRBACPermissions(
+  //   'database-cluster-credentials',
+  //   `${dbCluster.metadata.namespace}/${row.original.dbClusterName}`
+  // );
+  // const canRestore = canCreateRestore && canReadCredentials;
+  // const canCreateClusterFromBackup = canRestore && canCreateClusters;
 
   return [
-    // TODO: v2 restore — uncomment when restore feature is ready
-    // ...(canRestore ? [
-    //   <MenuItem key={0} disabled={row.original.state !== BackupStatus.OK || blockActions}
-    //     onClick={() => handleRestoreBackup(row.original.name)}
-    //     sx={{ m: 0, gap: 1, px: 2, py: '10px' }}>
-    //     <KeyboardReturnIcon /> {Messages.restore}
-    //   </MenuItem>,
-    // ] : []),
-    // ...(canCreateClusterFromBackup ? [
-    //   <MenuItem key={1} disabled={row.original.state !== BackupStatus.OK || blockActions}
-    //     onClick={() => handleRestoreToNewDbBackup(row.original.name)}
-    //     sx={{ m: 0, gap: 1, px: 2, py: '10px' }}>
-    //     <AddIcon /> {Messages.restoreToNewDb}
-    //   </MenuItem>,
-    // ] : []),
+    <MenuItem
+      key="restore"
+      disabled={backupState !== BackupStatus.SUCCEEDED}
+      onClick={() => handleRestoreBackup(backupName)}
+      sx={{ m: 0, gap: 1, px: 2, py: '10px' }}
+    >
+      <KeyboardReturnIcon /> {Messages.restore}
+    </MenuItem>,
+    // TODO: Temporarily hidden — create new DB from backup deferred by team
+    // <MenuItem
+    //   key="restore-to-new"
+    //   disabled={backupState !== BackupStatus.SUCCEEDED}
+    //   onClick={() => handleRestoreToNewDbBackup(backupName)}
+    //   sx={{ m: 0, gap: 1, px: 2, py: '10px' }}
+    // >
+    //   <AddIcon /> {Messages.restoreToNewDb}
+    // </MenuItem>,
     ...(canDelete
       ? [
           <MenuItem
             key="delete"
-            disabled={
-              getBackupState(row.original) === BackupStatus.DELETING ||
-              isDeleting
-            }
+            disabled={backupState === BackupStatus.DELETING || isDeleting}
             onClick={() => handleDeleteBackup(backupName)}
             sx={{ m: 0, gap: 1, px: 2, py: '10px' }}
           >
