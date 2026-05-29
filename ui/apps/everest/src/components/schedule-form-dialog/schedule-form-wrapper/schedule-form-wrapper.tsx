@@ -67,7 +67,7 @@ export const ScheduleFormWrapper = () => {
       setValue(
         ScheduleFormFields.backupClassName,
         availableBackupClasses[0]?.metadata?.name ?? '',
-        { shouldValidate: false }
+        { shouldValidate: true }
       );
     }
   }, [availableBackupClasses, selectedBackupClassName, setValue]);
