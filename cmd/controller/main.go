@@ -206,6 +206,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := (&backupcontroller.BackupStorageReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "Failed to create controller", "controller", "BackupStorage")
+		os.Exit(1)
+	}
+
 	if err := (&monitoringcontroller.MonitoringConfigReconciler{
 		Client:              mgr.GetClient(),
 		Scheme:              mgr.GetScheme(),
