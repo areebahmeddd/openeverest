@@ -2030,6 +2030,35 @@ export interface components {
                                 [key: string]: number | string;
                             };
                         };
+                        /** @description Service defines how this component is exposed. */
+                        service?: {
+                            /**
+                             * @description Annotations is a map of key-value pairs for annotating the Service.
+                             *     Commonly used to configure cloud provider settings
+                             *     (e.g., AWS ELB annotations, GCP load balancer settings).
+                             */
+                            annotations?: {
+                                [key: string]: string;
+                            };
+                            /**
+                             * @description LoadBalancerService contains LoadBalancer-specific configuration.
+                             *     Only applicable for "LoadBalancer" ServiceType.
+                             */
+                            loadBalancerService?: {
+                                /**
+                                 * @description SourceRanges lists IP source ranges (CIDR notation) that are
+                                 *     allowed to access the load balancer.
+                                 *     If unset, there is no limitations.
+                                 */
+                                sourceRanges?: string[];
+                            };
+                            /**
+                             * @description ServiceType defines how the component is exposed.
+                             *     The provider ultimately decides and validates supported service types.
+                             * @default ClusterIP
+                             */
+                            serviceType?: string;
+                        };
                         /**
                          * @description Storage requirements for this component.
                          *     For stateless components, this is an optional field.
@@ -3136,6 +3165,35 @@ export interface components {
                             requests?: {
                                 [key: string]: number | string;
                             };
+                        };
+                        /** @description Service defines how this component is exposed. */
+                        service?: {
+                            /**
+                             * @description Annotations is a map of key-value pairs for annotating the Service.
+                             *     Commonly used to configure cloud provider settings
+                             *     (e.g., AWS ELB annotations, GCP load balancer settings).
+                             */
+                            annotations?: {
+                                [key: string]: string;
+                            };
+                            /**
+                             * @description LoadBalancerService contains LoadBalancer-specific configuration.
+                             *     Only applicable for "LoadBalancer" ServiceType.
+                             */
+                            loadBalancerService?: {
+                                /**
+                                 * @description SourceRanges lists IP source ranges (CIDR notation) that are
+                                 *     allowed to access the load balancer.
+                                 *     If unset, there is no limitations.
+                                 */
+                                sourceRanges?: string[];
+                            };
+                            /**
+                             * @description ServiceType defines how the component is exposed.
+                             *     The provider ultimately decides and validates supported service types.
+                             * @default ClusterIP
+                             */
+                            serviceType?: string;
                         };
                         /**
                          * @description Storage requirements for this component.
